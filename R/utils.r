@@ -60,9 +60,9 @@ check_suggested <- function(pkg, version = NULL, compare = NA) {
     compare <- dep$compare
   }
 
-  if (!check_dep_version(pkg, version, compare)) {
+  if (!is_installed(pkg) || !check_dep_version(pkg, version, compare)) {
     msg <- paste0(sQuote(pkg),
-      if (version == 0) "" else paste0(" >= ", version),
+      if (is.na(version)) "" else paste0(" >= ", version),
       " must be installed for this functionality.")
 
     if (interactive()) {
@@ -105,6 +105,12 @@ write_dcf <- function(path, desc) {
   starts_with_whitespace <- grepl("^\\s", desc, perl = TRUE, useBytes = TRUE)
   delimiters <- ifelse(starts_with_whitespace, ":", ": ")
   text <- paste0(names(desc), delimiters, desc, collapse = "\n")
+
+  # If the description file has a declared encoding, set it so nchar() works
+  # properly.
+  if ("Encoding" %in% names(desc)) {
+    Encoding(text) <- desc[["Encoding"]]
+  }
 
   if (substr(text, nchar(text), 1) != "\n") {
     text <- paste0(text, "\n")
